@@ -19,50 +19,84 @@ MOUTH = "#6B2B2B"
 CUSHIONS = ["#FF8A80", "#80CBC4", "#FFD54F", "#B39DDB", "#81D4FA", "#F48FB1", "#AED581"]
 
 SISTERS = {
-    "dibhai": dict(s=1.15, pj="#8E6CCF", pants="#6A4FB0", style="long"),
-    "chhuti": dict(s=1.05, pj="#2BB3A3", pants="#1E8C80", style="bob"),
-    "mithi": dict(s=1.0, pj="#F06292", pants="#C2185B", style="pony"),
-    "bonu": dict(s=0.82, pj="#FFC93C", pants="#E0A800", style="pigtails"),
-    "mom": dict(s=1.45, pj="#43A047", pants="#43A047", style="bun", dress=True),
+    "dibhai": dict(s=1.15, pj="#8E6CCF", pants="#6A4FB0", style="long", accent="#FFD54F"),
+    "chhuti": dict(s=1.05, pj="#2BB3A3", pants="#1E8C80", style="braid", accent="#FF80AB"),
+    "mithi": dict(s=1.0, pj="#F06292", pants="#C2185B", style="pony", accent="#FFEB3B"),
+    "bonu": dict(s=0.82, pj="#FFC93C", pants="#E0A800", style="short", accent="#FF5252"),
+    "mom": dict(s=1.45, pj="#43A047", pants="#43A047", style="bun", accent="#FFD54F", dress=True),
 }
+
+HEAD_Y = -174  # head centre, in a person's own units (feet at 0)
 
 
 # ---------- people ----------
 
-def head(style, mood):
-    back = {
-        "long": '<path d="M-38 -4 Q-46 60 -30 58 L30 58 Q46 60 38 -4Z"/>',
-        "pony": '<circle cx="40" cy="-14" r="14"/><ellipse cx="52" cy="14" rx="12" ry="26"/>',
-        "pigtails": '<circle cx="-40" cy="4" r="13"/><circle cx="40" cy="4" r="13"/>'
-                    '<ellipse cx="-46" cy="24" rx="9" ry="16"/><ellipse cx="46" cy="24" rx="9" ry="16"/>',
-        "bun": '<circle cx="0" cy="-40" r="18"/>',
-        "bob": '<path d="M-40 -6 Q-42 30 -26 30 L26 30 Q42 30 40 -6Z"/>',
+def hair_back(style, accent):
+    """Hair that sits behind the head and body."""
+    shape = {
+        "long": '<path d="M-40 -8 C-50 30 -48 72 -40 94 Q0 102 40 94 C48 72 50 30 40 -8Z"/>',
+        "braid": '<path d="M-40 -8 C-46 20 -42 40 -34 46 L34 46 C42 40 46 20 40 -8Z"/>',
+        "pony": '<path d="M-38 -8 C-42 14 -38 30 -30 34 L30 34 C38 30 42 14 38 -8Z"/>'
+                '<path d="M22 -38 C64 -44 72 20 52 84 C44 60 42 12 18 -18Z"/>',
+        "short": '<path d="M-42 -6 C-46 20 -42 38 -30 40 L30 40 C42 38 46 20 42 -6Z"/>',
+        "bun": '<circle cx="0" cy="-44" r="19"/>',
     }[style]
+    tie = f'<circle cx="24" cy="-34" r="7" fill="{accent}"/>' if style == "pony" else ""
+    return f'<g fill="{HAIR}">{shape}</g>{tie}'
+
+
+def face(style, mood, accent):
+    """Face, fringe, and anything worn in front of the head."""
     if mood == "sleep":
-        eyes = ('<path d="M-17 3 q5 5 10 0 M7 3 q5 5 10 0" fill="none" stroke="#222" '
+        eyes = ('<path d="M-19 3 q6 6 12 0 M7 3 q6 6 12 0" fill="none" stroke="#3B2314" '
                 'stroke-width="3" stroke-linecap="round"/>')
     else:
-        eyes = ('<circle cx="-12" cy="2" r="4.2" fill="#222"/><circle cx="12" cy="2" r="4.2" fill="#222"/>'
-                '<circle cx="-10.5" cy="0.5" r="1.5" fill="#fff"/><circle cx="13.5" cy="0.5" r="1.5" fill="#fff"/>')
-    line = 'fill="none" stroke="#222" stroke-width="3" stroke-linecap="round"'
+        eyes = "".join(
+            f'<ellipse cx="{x}" cy="2" rx="7" ry="8" fill="#fff"/><circle cx="{x + 1}" cy="3" r="5" fill="#3B2314"/>'
+            f'<circle cx="{x + 1}" cy="3" r="2.4" fill="#000"/><circle cx="{x + 3}" cy="0.5" r="1.8" fill="#fff"/>'
+            for x in (-13, 13))
+    brows = ('<path d="M-20 -11 q7 -4 13 0 M7 -11 q7 -4 13 0" fill="none" stroke="#2B1B12" stroke-width="2.5" stroke-linecap="round"/>'
+             if mood not in ("sad", "cry") else
+             '<path d="M-20 -9 q7 -5 13 -3 M7 -12 q7 1 13 3" fill="none" stroke="#2B1B12" stroke-width="2.5" stroke-linecap="round"/>')
+    line = 'fill="none" stroke="#5A2E22" stroke-width="3" stroke-linecap="round"'
     mouth = {
-        "happy": f'<path d="M-8 14 Q0 22 8 14" {line}/>',
-        "big": f'<path d="M-10 13 Q0 28 10 13Z" fill="{MOUTH}"/>',
-        "sad": f'<path d="M-8 20 Q0 12 8 20" {line}/>',
-        "cry": f'<path d="M-8 20 Q0 12 8 20" {line}/>'
-               '<ellipse cx="-15" cy="14" rx="3" ry="6" fill="#6EC6FF"/><ellipse cx="15" cy="17" rx="3" ry="6" fill="#6EC6FF"/>',
-        "oh": f'<ellipse cx="0" cy="17" rx="4" ry="5" fill="{MOUTH}"/>',
-        "flat": f'<path d="M-8 17 H8" {line}/>',
-        "sleep": f'<path d="M-4 16 Q0 19 4 16" {line}/>',
+        "happy": f'<path d="M-8 19 Q0 27 8 19" {line}/>',
+        "big": f'<path d="M-10 18 Q0 33 10 18Z" fill="{MOUTH}"/><path d="M-6 26 Q0 30 6 26" fill="#F48FB1"/>',
+        "sad": f'<path d="M-8 25 Q0 17 8 25" {line}/>',
+        "cry": f'<path d="M-8 25 Q0 17 8 25" {line}/>'
+               '<path d="M-16 11 q-4 8 0 11 q4 -3 0 -11Z M16 11 q-4 8 0 11 q4 -3 0 -11Z" fill="#6EC6FF"/>',
+        "oh": f'<ellipse cx="0" cy="22" rx="4.5" ry="5.5" fill="{MOUTH}"/>',
+        "flat": f'<path d="M-7 22 H7" {line}/>',
+        "sleep": f'<path d="M-4 21 Q0 24 4 21" {line}/>',
     }[mood]
+    if style == "short":
+        fringe = "M-38 2 C-42 -50 42 -50 38 2 C30 -12 14 -15 0 -13 C-14 -15 -30 -12 -38 2Z"
+    else:
+        fringe = "M-38 0 C-42 -50 42 -50 38 0 C34 -20 18 -28 2 -26 C-10 -16 -26 -12 -38 0Z"
+    strands = ('<path d="M-38 -4 C-43 16 -41 34 -36 46 L-29 43 C-33 27 -33 10 -31 -6Z"/>'
+               '<path d="M38 -4 C43 16 41 34 36 46 L29 43 C33 27 33 10 31 -6Z"/>') if style != "bun" else ""
+    extra = ""
+    if style == "long":
+        extra = f'<path d="M-37 -14 C-30 -44 30 -44 37 -14" fill="none" stroke="{accent}" stroke-width="6" stroke-linecap="round"/>'
+    elif style == "braid":
+        extra = ("".join(f'<ellipse cx="{30 + i * 2}" cy="{50 + i * 15}" rx="9" ry="10" fill="{HAIR}"/>' for i in range(5))
+                 + f'<rect x="31" y="118" width="14" height="7" rx="3" fill="{accent}"/>'
+                 + f'<path d="M34 125 l-4 12 M38 125 v13 M42 125 l4 12" stroke="{HAIR}" stroke-width="3" stroke-linecap="round"/>')
+    elif style == "short":
+        extra = f'<rect x="-30" y="-24" width="16" height="6" rx="3" fill="{accent}" transform="rotate(-20 -22 -21)"/>'
     return (
-        f'<g fill="{HAIR}">{back}</g>'
-        f'<circle r="34" fill="{SKIN}" stroke="{SKIN_EDGE}" stroke-width="3"/>'
-        f'<path d="M-36 0 C-38 -46 38 -46 36 0 C26 -16 10 -20 0 -15 C-10 -20 -26 -16 -36 0Z" fill="{HAIR}"/>'
-        f"{eyes}"
-        '<circle cx="-20" cy="12" r="5" fill="#F48FB1" opacity=".6"/><circle cx="20" cy="12" r="5" fill="#F48FB1" opacity=".6"/>'
+        f'<circle cx="-34" cy="6" r="7" fill="{SKIN}"/><circle cx="34" cy="6" r="7" fill="{SKIN}"/>'
+        f'<ellipse rx="34" ry="36" fill="{SKIN}" stroke="#C98A62" stroke-width="2"/>'
+        f"{brows}{eyes}"
+        '<path d="M-2 11 q2 3 5 0" fill="none" stroke="#B57552" stroke-width="2.5" stroke-linecap="round"/>'
+        '<circle cx="-22" cy="14" r="5.5" fill="#F48FB1" opacity=".55"/><circle cx="22" cy="14" r="5.5" fill="#F48FB1" opacity=".55"/>'
         f"{mouth}"
+        f'<g fill="{HAIR}"><path d="{fringe}"/>{strands}</g>{extra}'
     )
+
+
+def head(style, mood, accent="#FFD54F"):
+    return hair_back(style, accent) + face(style, mood, accent)
 
 
 ARM_ENDS = {  # (end x, end y, control x factor, control y) for the right arm; left mirrors
@@ -91,13 +125,17 @@ def person(who, x, y, arms="down", mood="happy", right_arm=None):
                  f'<rect x="4" y="-62" width="13" height="60" rx="5" fill="{p["pants"]}"/>'
                  '<ellipse cx="-12" cy="-2" rx="11" ry="6" fill="#fff" stroke="#ccc" stroke-width="2"/>'
                  '<ellipse cx="12" cy="-2" rx="11" ry="6" fill="#fff" stroke="#ccc" stroke-width="2"/>')
-    body = (f'<path d="M-26 -128 Q0 -138 26 -128 L32 -56 L-32 -56Z" fill="{p["pj"]}"/>'
+    body = (f'<path d="M-24 -128 Q0 -136 24 -128 Q34 -124 32 -110 L32 -56 L-32 -56 L-32 -110 Q-34 -124 -24 -128Z" fill="{p["pj"]}"/>'
+            f'<path d="M-10 -130 Q0 -122 10 -130" fill="none" stroke="#ffffff88" stroke-width="3"/>'
             '<g fill="#fff" opacity=".35"><circle cx="-12" cy="-104" r="4"/><circle cx="10" cy="-90" r="4"/>'
             '<circle cx="-6" cy="-72" r="4"/><circle cx="16" cy="-116" r="3"/></g>')
+    neck = f'<rect x="-8" y="-150" width="16" height="26" rx="6" fill="{SKIN}"/>'
     return (
-        f'<g transform="translate({x} {y}) scale({s})">{lower}{body}'
+        f'<g transform="translate({x} {y}) scale({s})">'
+        f'<g transform="translate(0 {HEAD_Y})">{hair_back(p["style"], p["accent"])}</g>'
+        f'{lower}{neck}{body}'
         f'{arm(-1, arms, p["pj"])}{arm(1, right_arm or arms, p["pj"])}'
-        f'<g transform="translate(0 -166)">{head(p["style"], mood)}</g></g>'
+        f'<g transform="translate(0 {HEAD_Y})">{face(p["style"], mood, p["accent"])}</g></g>'
     )
 
 
@@ -106,11 +144,12 @@ def hand_y(who, y):
 
 
 def top_of_head(who, y):
-    return y - 210 * SISTERS[who]["s"]
+    return y - 220 * SISTERS[who]["s"]
 
 
 def sleeping_head(who, x, y):
-    return f'<g transform="translate({x} {y}) scale(0.85)">{head(SISTERS[who]["style"], "sleep")}</g>'
+    p = SISTERS[who]
+    return f'<g transform="translate({x} {y}) scale(0.85)">{head(p["style"], "sleep", p["accent"])}</g>'
 
 
 # ---------- things ----------
@@ -193,18 +232,42 @@ def ball(x, y):
 
 # ---------- the room ----------
 
+def palm(x, y, s, trunk="#8D6E4A", leaves="#3E8E41"):
+    fronds = "".join(f'<ellipse cx="0" cy="-36" rx="11" ry="40" transform="rotate({a})" fill="{leaves}"/>'
+                     for a in (-110, -70, -35, 0, 35, 70, 110))
+    return (f'<g transform="translate({x} {y}) scale({s})">'
+            f'<path d="M0 0 Q14 -110 4 -220" fill="none" stroke="{trunk}" stroke-width="16" stroke-linecap="round"/>'
+            f'<g transform="translate(4 -220)">{fronds}</g></g>')
+
+
+def apartments(x, y, w, h, night):
+    wall, lit, dark = ("#3A4466", "#FFE082", "#2A3150") if night else ("#E8D3B5", "#9FD3F5", "#9FD3F5")
+    out = f'<rect x="{x}" y="{y - h}" width="{w}" height="{h}" fill="{wall}"/><rect x="{x - 8}" y="{y - h - 12}" width="{w + 16}" height="14" fill="{"#2A3150" if night else "#B5653A"}"/>'
+    for r, wy in enumerate(range(y - h + 22, y - 30, 60)):
+        for c, wx in enumerate(range(x + 18, x + w - 30, 54)):
+            on = night and (r + c) % 3 != 0
+            out += f'<rect x="{wx}" y="{wy}" width="32" height="36" rx="3" fill="{lit if on else dark}"/>'
+    return out
+
+
 def window_view(night):
+    """Looking out of the San Jose apartment: neighbours' apartments, palms, and the hills with the observatory."""
     if night:
         stars = "".join(f'<circle cx="{x}" cy="{y}" r="5" fill="#FFF9C4"/>' for x, y in
-                        [(90, 80), (220, 160), (330, 60), (480, 140), (120, 260), (420, 250), (560, 70)])
-        trees = "".join(tree(x, 560, 1.4, "#2E3B55") for x in (80, 330, 600, 760))
+                        [(90, 80), (220, 160), (330, 60), (480, 140), (120, 230), (420, 210), (560, 70)])
         return ('<rect width="800" height="600" fill="#1F2B5C"/>' + stars
-                + '<circle cx="640" cy="160" r="80" fill="#FFF3B0"/><circle cx="680" cy="130" r="72" fill="#1F2B5C"/>'
-                + '<path d="M0 470 Q200 420 400 460 T800 450 V600 H0Z" fill="#2C3A63"/>' + trees)
-    trees = "".join(tree(x, 560, 1.5, FALL_CANOPY[i % 5]) for i, x in enumerate((70, 280, 520, 740)))
+                + '<circle cx="640" cy="140" r="70" fill="#FFF3B0"/><circle cx="676" cy="114" r="62" fill="#1F2B5C"/>'
+                + '<path d="M0 360 Q160 300 330 330 Q480 250 620 300 T800 320 V600 H0Z" fill="#2C3A63"/>'
+                + '<path d="M470 268 a16 16 0 0 1 32 0Z" fill="#9AA6C8"/>'
+                + apartments(30, 600, 290, 190, True) + apartments(600, 600, 200, 150, True)
+                + palm(420, 600, 1.3, "#1B2440", "#1B2440") + palm(500, 600, 1.0, "#1B2440", "#1B2440"))
     return ('<rect width="800" height="600" fill="#5DB7F2"/>'
-            '<circle cx="660" cy="110" r="70" fill="#FFD84D"/>' + cloud(80, 120, 1.6) + cloud(360, 80, 1.3)
-            + '<path d="M0 470 Q200 420 400 460 T800 450 V600 H0Z" fill="#D9934E"/>' + trees)
+            '<circle cx="680" cy="100" r="60" fill="#FFD84D"/>' + cloud(60, 110, 1.5) + cloud(330, 70, 1.2)
+            + '<path d="M0 360 Q160 300 330 330 Q480 250 620 300 T800 320 V600 H0Z" fill="#D8B46A"/>'
+            + '<path d="M0 400 Q200 350 400 380 T800 370 V600 H0Z" fill="#C49A52"/>'
+            + '<rect x="470" y="262" width="40" height="18" fill="#fff"/><path d="M466 264 a24 24 0 0 1 48 0Z" fill="#fff" stroke="#CFD8DC" stroke-width="3"/>'
+            + apartments(30, 600, 290, 190, False) + apartments(600, 600, 200, 150, False)
+            + tree(380, 600, 1.4, "#E4572E") + palm(440, 600, 1.3) + palm(510, 600, 1.0) + tree(740, 600, 1.1, "#6CC24A"))
 
 
 def room(night=False, door=None):
@@ -250,9 +313,11 @@ def room(night=False, door=None):
     elif door == "open":
         out += ('<rect x="634" y="244" width="142" height="228" fill="#7A4E2D"/>'
                 '<rect x="640" y="250" width="130" height="222" fill="#8ED0F7"/>'
-                '<rect x="640" y="410" width="130" height="62" fill="#9BDB72"/>'
-                + f'<g transform="translate(640 250)">{tree(30, 170, 0.9, "#F3A712")}{tree(105, 175, 0.75, "#E4572E")}</g>'
-                '<polygon points="770,250 800,236 800,486 770,472" fill="#A1683A"/>')
+                + f'<g transform="translate(640 250)">{palm(80, 170, 0.62)}{tree(28, 170, 0.75, "#F3A712")}</g>'
+                '<rect x="640" y="410" width="130" height="62" fill="#CFC8BE"/>'
+                '<path d="M640 380 H770 M640 410 H770" stroke="#90A4AE" stroke-width="5"/>'
+                + "".join(f'<path d="M{x} 380 V410" stroke="#90A4AE" stroke-width="4"/>' for x in range(652, 770, 18))
+                + '<polygon points="770,250 800,236 800,486 770,472" fill="#A1683A"/>')
     return out
 
 

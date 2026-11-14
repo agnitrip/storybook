@@ -93,7 +93,7 @@ window.STORIES = [
         `I am Mithi!`,
       ] },
       { image: "stories/big-sleepover/pages/03.svg", text: [
-        `One day, we had a sleepover!`,
+        `One day, we had a sleepover at our apartment in San Jose!`,
         `"Yay, sleepover! Yoo-hoo! Yoo-hoo!" we cheered.`,
       ] },
       { image: "stories/big-sleepover/pages/04.svg", text: [
