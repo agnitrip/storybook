@@ -6,6 +6,7 @@ story's pages/ folder and pointing that page's `image` at it in stories.js.
 Run: python3 tools/make_placeholder_art.py
 """
 import os
+import random
 
 OUT = os.path.join(os.path.dirname(__file__), "..", "stories", "bee-and-flower", "pages")
 
@@ -23,22 +24,115 @@ def page(body, bg):
     return f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">{bg}{body}</svg>\n'
 
 
-def fall_bg():
+FALL_CANOPY = ["#E4572E", "#F3A712", "#C0392B", "#E9C46A", "#D9822B"]
+SPRING_CANOPY = ["#6CC24A", "#4FAE3A", "#8FD45E", "#F7A8C4"]
+
+
+def sky(top, bottom):
     return (
-        '<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">'
-        '<stop offset="0" stop-color="#FDEBCB"/><stop offset="1" stop-color="#F7D19B"/></linearGradient></defs>'
+        f'<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">'
+        f'<stop offset="0" stop-color="{top}"/><stop offset="1" stop-color="{bottom}"/></linearGradient></defs>'
         '<rect width="800" height="600" fill="url(#sky)"/>'
-        '<circle cx="680" cy="90" r="46" fill="#FFB547" opacity=".85"/>'
-        '<path d="M0 470 Q200 420 400 460 T800 450 V600 H0Z" fill="#D9934E"/>'
+        '<circle cx="680" cy="86" r="62" fill="#FFF3B0" opacity=".6"/>'
+        '<circle cx="680" cy="86" r="44" fill="#FFD84D"/>'
+    )
+
+
+def cloud(x, y, s=1.0):
+    puffs = [(0, 0, 40, 24), (34, -14, 34, 28), (70, -2, 38, 24), (36, 8, 56, 20)]
+    return f'<g transform="translate({x} {y}) scale({s})" fill="#fff" opacity=".95">' + "".join(
+        f'<ellipse cx="{cx}" cy="{cy}" rx="{rx}" ry="{ry}"/>' for cx, cy, rx, ry in puffs) + "</g>"
+
+
+def tree(x, y, s, color):
+    return (
+        f'<g transform="translate({x} {y}) scale({s})">'
+        '<rect x="-8" y="-72" width="16" height="74" rx="4" fill="#7A4E2D"/>'
+        f'<circle cx="0" cy="-104" r="46" fill="{color}"/>'
+        f'<circle cx="-32" cy="-80" r="32" fill="{color}"/><circle cx="32" cy="-80" r="32" fill="{color}"/>'
+        '<circle cx="-12" cy="-116" r="14" fill="#fff" opacity=".18"/>'
+        "</g>"
+    )
+
+
+def flock(x, y):
+    return "".join(
+        f'<path d="M{x + dx} {y + dy} q7 -8 14 0 q7 -8 14 0" fill="none" stroke="#4A5A6A" stroke-width="2.5" stroke-linecap="round"/>'
+        for dx, dy in [(0, 0), (34, 12), (-30, 16)]
+    )
+
+
+def tuft(x, y, color):
+    return (f'<path d="M{x - 10} {y} L{x - 14} {y - 22} M{x} {y} L{x} {y - 28} M{x + 10} {y} L{x + 15} {y - 20}" '
+            f'stroke="{color}" stroke-width="4" stroke-linecap="round"/>')
+
+
+def rock(x, y, s=1.0):
+    return (f'<g transform="translate({x} {y}) scale({s})"><ellipse cx="0" cy="0" rx="26" ry="16" fill="#9AA3AB"/>'
+            '<ellipse cx="-6" cy="-5" rx="10" ry="5" fill="#C3CAD0"/></g>')
+
+
+def mushroom(x, y):
+    return (f'<g transform="translate({x} {y})"><rect x="-5" y="-18" width="10" height="18" rx="4" fill="#F5E6CC"/>'
+            '<path d="M-18 -16 Q0 -40 18 -16Z" fill="#D63A2F"/>'
+            '<circle cx="-7" cy="-24" r="3" fill="#fff"/><circle cx="6" cy="-27" r="2.5" fill="#fff"/></g>')
+
+
+def pumpkin(x, y, s=1.0):
+    return (f'<g transform="translate({x} {y}) scale({s})">'
+            '<ellipse cx="-12" cy="-16" rx="16" ry="18" fill="#F08A24"/><ellipse cx="12" cy="-16" rx="16" ry="18" fill="#F08A24"/>'
+            '<ellipse cx="0" cy="-16" rx="14" ry="19" fill="#F59E3C"/>'
+            '<path d="M0 -34 Q2 -42 8 -44" stroke="#4E7A2A" stroke-width="4" fill="none" stroke-linecap="round"/></g>')
+
+
+def acorn(x, y):
+    return (f'<g transform="translate({x} {y})"><ellipse cx="0" cy="-6" rx="7" ry="9" fill="#9C6B30"/>'
+            '<path d="M-9 -10 Q0 -20 9 -10Z" fill="#6B4423"/></g>')
+
+
+def daisy(x, y):
+    petals = "".join(f'<ellipse cx="0" cy="-7" rx="3.5" ry="7" transform="rotate({a})" fill="#fff"/>' for a in range(0, 360, 45))
+    return f'<g transform="translate({x} {y})">{petals}<circle r="4" fill="#FFC93C"/></g>'
+
+
+def scenery_back(rng, spring):
+    canopy = SPRING_CANOPY if spring else FALL_CANOPY
+    out = "".join(cloud(x, y, s) for x, y, s in
+                  [(rng.randint(30, 160), rng.randint(50, 90), 0.9),
+                   (rng.randint(300, 460), rng.randint(40, 80), 0.7),
+                   (rng.randint(520, 600), rng.randint(150, 190), 0.6)])
+    if not spring:
+        out += flock(rng.randint(200, 520), rng.randint(110, 150))
+    out += f'<path d="M0 430 Q150 390 320 420 T640 410 T800 400 V600 H0Z" fill="{"#B5E08C" if spring else "#E9B676"}"/>'
+    for i, x in enumerate(range(20, 800, 70)):
+        out += tree(x + rng.randint(-18, 18), 440 + rng.randint(-14, 6), rng.uniform(0.45, 0.7), canopy[(i + rng.randint(0, 3)) % len(canopy)])
+    return out
+
+
+def scenery_front(rng, spring):
+    if spring:
+        items = [lambda x, y: tuft(x, y, "#4E9A2E"), lambda x, y: daisy(x, y - 6), rock]
+    else:
+        items = [lambda x, y: tuft(x, y, "#C9A33B"), rock, mushroom, pumpkin, acorn,
+                 lambda x, y: leaf(x, y - 4, rng.randint(0, 180), rng.choice(FALL_CANOPY), 0.7)]
+    out = ""
+    for x in range(30, 800, 64):
+        out += rng.choice(items)(x + rng.randint(-14, 14), 576 + rng.randint(-8, 10))
+    return out
+
+
+def fall_bg(rng):
+    return (
+        sky("#7EC8F7", "#D4EEFF") + scenery_back(rng, spring=False)
+        + '<path d="M0 470 Q200 420 400 460 T800 450 V600 H0Z" fill="#D9934E"/>'
         '<path d="M0 520 Q260 490 520 520 T800 510 V600 H0Z" fill="#B8733A"/>'
     )
 
 
-def spring_bg():
+def spring_bg(rng):
     return (
-        '<rect width="800" height="600" fill="#CDEBFF"/>'
-        '<circle cx="680" cy="90" r="50" fill="#FFE066"/>'
-        '<path d="M0 440 Q200 400 400 430 T800 420 V600 H0Z" fill="#9BDB72"/>'
+        sky("#6CC3FF", "#DDF3FF") + scenery_back(rng, spring=True)
+        + '<path d="M0 440 Q200 400 400 430 T800 420 V600 H0Z" fill="#9BDB72"/>'
         '<path d="M0 500 Q260 470 520 500 T800 490 V600 H0Z" fill="#7CC456"/>'
     )
 
@@ -231,32 +325,32 @@ def grumble(x, y):
 
 
 PAGES = {
-    "01": (fall_bg(), flower(470, 250, 1.4, "smile", 230) + bee(300, 180, 1.3, "happy")
+    "01": ("fall", flower(470, 250, 1.4, "smile", 230) + bee(300, 180, 1.3, "happy")
            + heart(390, 110, 1.4) + falling_leaves([(90, 120, 20), (700, 260, -30), (150, 360, 60)])),
-    "02": (fall_bg(), flight_path("M60 330 Q200 160 330 260 T560 220")
+    "02": ("fall", flight_path("M60 330 Q200 160 330 260 T560 220")
            + bee(600, 210, 1.3, "happy") + falling_leaves([(120, 120, 20), (300, 90, -30), (720, 330, 50), (470, 380, 10)])
            + dry_stem(140, 480, 120, 20) + dry_stem(700, 470, 110, -25)),
-    "03": (fall_bg(), dry_stem(150, 490, 150, 30) + dry_stem(260, 480, 130, -20) + dry_stem(560, 480, 140, 35)
+    "03": ("fall", dry_stem(150, 490, 150, 30) + dry_stem(260, 480, 130, -20) + dry_stem(560, 480, 140, 35)
            + dry_stem(680, 490, 120, -30)
            + falling_leaves([(100, 100, 30), (220, 220, -40), (360, 80, 60), (620, 140, -10), (720, 250, 45), (470, 60, 15), (520, 300, -60)])
            + bee(400, 260, 1.5, "sad", hold_tummy=True) + grumble(370, 340)),
-    "04": (fall_bg(), squirrel(540, 360) + bee(220, 220, 1.2, "wow")
+    "04": ("fall", squirrel(540, 360) + bee(220, 220, 1.2, "wow")
            + leaf(440, 470, 30, "#9C6B3A", 1.4) + leaf(640, 480, -20, "#E4572E", 1.4)),
-    "05": (fall_bg(), tree_with_bird(500, 200) + bee(180, 230, 1.2, "wow")),
-    "06": (fall_bg(), baby_elephant(470, 380) + bee(170, 200, 1.2, "wow")
+    "05": ("fall", tree_with_bird(500, 200) + bee(180, 230, 1.2, "wow")),
+    "06": ("fall", baby_elephant(470, 380) + bee(170, 200, 1.2, "wow")
            + leaf(330, 500, 30, "#9C6B3A", 1.4) + falling_leaves([(120, 380, 20), (700, 120, -30), (360, 90, 60)])),
-    "07": (fall_bg(), big_leaf(400, 470) + bee(400, 395, 1.4, "sad")
+    "07": ("fall", big_leaf(400, 470) + bee(400, 395, 1.4, "sad")
            + falling_leaves([(120, 100, 20), (690, 140, -30), (240, 220, 60), (600, 260, 30)])),
-    "08": (fall_bg(), leaf_pile(420, 470) + flower(430, 330, 1.0, "talk", 150) + leaf_pile(430, 500)
+    "08": ("fall", leaf_pile(420, 470) + flower(430, 330, 1.0, "talk", 150) + leaf_pile(430, 500)
            + bee(270, 140, 1.2, "wow")),
-    "09": (fall_bg(), flower(400, 260, 1.5, "smile", 230) + bee(400, 175, 1.1, "yum", pollen=True)
+    "09": ("fall", flower(400, 260, 1.5, "smile", 230) + bee(400, 175, 1.1, "yum", pollen=True)
            + sparkles([(260, 140), (540, 120), (300, 300), (520, 310)])),
-    "10": (fall_bg(), flower(480, 250, 1.4, "talk", 230) + bee(270, 230, 1.2, "happy", pollen=True)
+    "10": ("fall", flower(480, 250, 1.4, "talk", 230) + bee(270, 230, 1.2, "happy", pollen=True)
            + heart(380, 130, 1.6)),
-    "11": (fall_bg(), flower(140, 300, 0.9, None, 180) + flower(400, 330, 0.9, None, 160) + flower(660, 290, 0.9, None, 190)
+    "11": ("fall", flower(140, 300, 0.9, None, 180) + flower(400, 330, 0.9, None, 160) + flower(660, 290, 0.9, None, 190)
            + flight_path("M140 250 Q270 120 400 280 T660 240")
            + bee(540, 150, 1.0, "happy", pollen=True)),
-    "12": (spring_bg(), "".join(flower(x, y, s, "smile", h) for x, y, s, h in
+    "12": ("spring", "".join(flower(x, y, s, "smile", h) for x, y, s, h in
                                [(90, 400, .6, 140), (210, 360, .75, 180), (340, 410, .6, 140), (470, 370, .8, 170),
                                 (600, 410, .6, 140), (720, 370, .75, 180), (150, 470, .5, 120), (400, 480, .5, 110), (650, 480, .5, 110)])
            + bee(400, 170, 1.2, "happy") + heart(300, 120) + heart(500, 110)),
@@ -265,7 +359,11 @@ PAGES = {
 
 def main():
     os.makedirs(OUT, exist_ok=True)
-    for name, (bg, body) in PAGES.items():
+    for name, (season, body) in PAGES.items():
+        # Seed by page number so each page gets its own scenery but reruns are stable.
+        rng = random.Random(int(name))
+        spring = season == "spring"
+        bg = (spring_bg(rng) if spring else fall_bg(rng)) + scenery_front(rng, spring)
         with open(os.path.join(OUT, f"{name}.svg"), "w") as f:
             f.write(page(body, bg))
     print(f"wrote {len(PAGES)} pages to {os.path.abspath(OUT)}")
