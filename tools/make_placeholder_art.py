@@ -121,19 +121,92 @@ def scenery_front(rng, spring):
     return out
 
 
-def fall_bg(rng):
+def bush(x, y, s, colors):
+    blobs = [(-26, 0, 22), (0, -12, 26), (26, 0, 22), (0, 6, 22)]
+    return f'<g transform="translate({x} {y}) scale({s})">' + "".join(
+        f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="{colors[i % len(colors)]}"/>' for i, (cx, cy, r) in enumerate(blobs)) + "</g>"
+
+
+def fence(x, y, posts=4):
+    out = f'<g transform="translate({x} {y})">'
+    out += f'<rect x="0" y="-30" width="{(posts - 1) * 30 + 8}" height="6" fill="#A8794A"/>'
+    out += f'<rect x="0" y="-16" width="{(posts - 1) * 30 + 8}" height="6" fill="#A8794A"/>'
+    out += "".join(f'<rect x="{i * 30}" y="-40" width="8" height="40" rx="2" fill="#C49461"/>' for i in range(posts))
+    return out + "</g>"
+
+
+def hay_bale(x, y):
+    return (f'<g transform="translate({x} {y})"><rect x="-30" y="-36" width="60" height="36" rx="12" fill="#E6C15A"/>'
+            '<path d="M-20 -26 h40 M-22 -16 h44 M-20 -6 h40" stroke="#C9A33B" stroke-width="3"/></g>')
+
+
+def barn(x, y, s=0.5):
+    return (f'<g transform="translate({x} {y}) scale({s})">'
+            '<rect x="-50" y="-70" width="100" height="70" fill="#C0392B"/>'
+            '<polygon points="-60,-70 0,-115 60,-70" fill="#8E2A20"/>'
+            '<rect x="-18" y="-44" width="36" height="44" fill="#fff"/>'
+            '<path d="M-18 -44 L18 0 M18 -44 L-18 0" stroke="#C0392B" stroke-width="5"/></g>')
+
+
+def butterfly_small(x, y, color):
+    return (f'<g transform="translate({x} {y})"><ellipse cx="-7" cy="0" rx="8" ry="11" fill="{color}"/>'
+            f'<ellipse cx="7" cy="0" rx="8" ry="11" fill="{color}"/><rect x="-1.5" y="-9" width="3" height="18" rx="1.5" fill="#333"/></g>')
+
+
+# Pages whose own drawing already fills one side, so the big framing tree stays off that side.
+SKIP_EDGE_TREE = {"05": "right"}
+
+
+def scenery_mid(rng, spring, page_id):
+    canopy = SPRING_CANOPY if spring else FALL_CANOPY
+    bushes = ["#4FAE3A", "#6CC24A"] if spring else ["#C0392B", "#D9822B", "#E9C46A"]
+    out = ""
+    for _ in range(3):
+        out += bush(rng.randint(60, 740), rng.randint(486, 506), rng.uniform(0.7, 1.0), bushes)
+    extra = [lambda: fence(rng.randint(120, 560), 512, rng.randint(3, 5))]
+    if not spring:
+        extra.append(lambda: hay_bale(rng.randint(150, 650), 514))
+    for make in rng.sample(extra, len(extra)):
+        out += make()
+    return out
+
+
+def edge_trees(rng, spring, page_id):
+    canopy = SPRING_CANOPY if spring else FALL_CANOPY
+    out = ""
+    if SKIP_EDGE_TREE.get(page_id) != "left":
+        out += tree(rng.randint(20, 50), 572, rng.uniform(1.5, 1.75), rng.choice(canopy[:3]))
+    if SKIP_EDGE_TREE.get(page_id) != "right":
+        out += tree(rng.randint(750, 780), 572, rng.uniform(1.5, 1.75), rng.choice(canopy[:3]))
+    return out
+
+
+def air(rng, spring):
+    if spring:
+        return "".join(butterfly_small(rng.randint(120, 680), rng.randint(220, 330), rng.choice(["#FFB347", "#B39DDB", "#81D4FA"]))
+                       for _ in range(3))
+    return "".join(leaf(rng.randint(60, 740), rng.randint(180, 420), rng.randint(0, 180), rng.choice(FALL_CANOPY), 0.8)
+                   for _ in range(6))
+
+
+def fall_bg(rng, page_id):
+    far_barn = barn(rng.choice([rng.randint(200, 300), rng.randint(470, 560)]), 432) if rng.random() < 0.6 else ""
     return (
-        sky("#7EC8F7", "#D4EEFF") + scenery_back(rng, spring=False)
+        sky("#4FB0F0", "#A6DAFA") + scenery_back(rng, spring=False) + far_barn
         + '<path d="M0 470 Q200 420 400 460 T800 450 V600 H0Z" fill="#D9934E"/>'
-        '<path d="M0 520 Q260 490 520 520 T800 510 V600 H0Z" fill="#B8733A"/>'
+        + scenery_mid(rng, False, page_id)
+        + '<path d="M0 520 Q260 490 520 520 T800 510 V600 H0Z" fill="#B8733A"/>'
+        + edge_trees(rng, False, page_id) + air(rng, False)
     )
 
 
-def spring_bg(rng):
+def spring_bg(rng, page_id):
     return (
-        sky("#6CC3FF", "#DDF3FF") + scenery_back(rng, spring=True)
+        sky("#3FA9F0", "#A6DAFA") + scenery_back(rng, spring=True)
         + '<path d="M0 440 Q200 400 400 430 T800 420 V600 H0Z" fill="#9BDB72"/>'
-        '<path d="M0 500 Q260 470 520 500 T800 490 V600 H0Z" fill="#7CC456"/>'
+        + scenery_mid(rng, True, page_id)
+        + '<path d="M0 500 Q260 470 520 500 T800 490 V600 H0Z" fill="#7CC456"/>'
+        + edge_trees(rng, True, page_id) + air(rng, True)
     )
 
 
@@ -363,7 +436,7 @@ def main():
         # Seed by page number so each page gets its own scenery but reruns are stable.
         rng = random.Random(int(name))
         spring = season == "spring"
-        bg = (spring_bg(rng) if spring else fall_bg(rng)) + scenery_front(rng, spring)
+        bg = (spring_bg(rng, name) if spring else fall_bg(rng, name)) + scenery_front(rng, spring)
         with open(os.path.join(OUT, f"{name}.svg"), "w") as f:
             f.write(page(body, bg))
     print(f"wrote {len(PAGES)} pages to {os.path.abspath(OUT)}")
