@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stories by Adhuna</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Baloo+2:wght@600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="wrap">
+    <header class="shelf-head">
+      <h1>Stories by Adhuna</h1>
+      <p>Stories and pictures, one book at a time.</p>
+    </header>
+    <section class="shelf" id="shelf"></section>
+  </main>
+
+  <script src="stories.js"></script>
+  <script>
+    const shelf = document.getElementById("shelf");
+    for (const s of window.STORIES) {
+      const book = document.createElement("article");
+      book.className = "book";
+      book.innerHTML = `
+        <img alt="" src="${s.cover}">
+        <div class="book-body">
+          <h2></h2>
+          <p class="by"></p>
+          <p class="blurb"></p>
+          <a class="btn" href="story.html?id=${encodeURIComponent(s.id)}">Read the story</a>
+        </div>`;
+      book.querySelector("img").alt = `Cover of ${s.title}`;
+      book.querySelector("h2").textContent = s.title;
+      book.querySelector(".by").textContent = `By ${s.author}`;
+      book.querySelector(".blurb").textContent = s.blurb;
+      shelf.appendChild(book);
+    }
+    const next = document.createElement("div");
+    next.className = "coming";
+    next.textContent = "More stories coming soon!";
+    shelf.appendChild(next);
+  </script>
+</body>
+</html>

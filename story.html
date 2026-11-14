@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Story</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Baloo+2:wght@600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="wrap">
+    <div class="topbar">
+      <a class="brand" href="index.html">← All stories</a>
+      <button class="btn ghost small" id="read">🔊 Read to me</button>
+    </div>
+
+    <article class="reader" id="reader">
+      <img id="pic" alt="">
+      <div class="page-text" id="text" aria-live="polite"></div>
+    </article>
+
+    <nav class="controls">
+      <button class="btn" id="back">← Back</button>
+      <span class="count" id="count"></span>
+      <button class="btn" id="next">Next →</button>
+    </nav>
+    <div class="dots" id="dots"></div>
+    <div class="end" id="end">
+      <button class="btn ghost" id="again">Read again</button>
+      <a class="btn" href="index.html">More stories</a>
+    </div>
+  </main>
+
+  <script src="stories.js"></script>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const story = window.STORIES.find(s => s.id === params.get("id")) || window.STORIES[0];
+    const pages = story.pages;
+    document.title = story.title;
+
+    const $ = id => document.getElementById(id);
+    const dots = pages.map((_, i) => {
+      const d = document.createElement("button");
+      d.className = "dot";
+      d.setAttribute("aria-label", `Go to page ${i + 1}`);
+      d.onclick = () => show(i);
+      $("dots").appendChild(d);
+      return d;
+    });
+
+    // Preload pictures so page turns feel instant.
+    pages.forEach(p => { new Image().src = p.image; });
+
+    let current = 0;
+
+    function show(i) {
+      current = Math.max(0, Math.min(pages.length - 1, i));
+      const p = pages[current];
+      speechSynthesis.cancel();
+      $("pic").src = p.image;
+      $("pic").alt = p.text.join(" ");
+      const text = $("text");
+      text.className = "page-text" + (p.cover ? " cover" : "");
+      text.replaceChildren(...p.text.map(line => {
+        const el = document.createElement("p");
+        el.textContent = line;
+        return el;
+      }));
+      $("count").textContent = `Page ${current + 1} of ${pages.length}`;
+      $("back").disabled = current === 0;
+      $("next").disabled = current === pages.length - 1;
+      $("end").classList.toggle("show", current === pages.length - 1);
+      dots.forEach((d, j) => d.classList.toggle("on", j === current));
+      history.replaceState(null, "", `#${current + 1}`);
+    }
+
+    $("back").onclick = () => show(current - 1);
+    $("next").onclick = () => show(current + 1);
+    $("again").onclick = () => show(0);
+
+    document.addEventListener("keydown", e => {
+      if (e.key === "ArrowRight") show(current + 1);
+      if (e.key === "ArrowLeft") show(current - 1);
+    });
+
+    let startX = null;
+    $("reader").addEventListener("touchstart", e => { startX = e.touches[0].clientX; }, { passive: true });
+    $("reader").addEventListener("touchend", e => {
+      if (startX === null) return;
+      const dx = e.changedTouches[0].clientX - startX;
+      if (Math.abs(dx) > 50) show(current + (dx < 0 ? 1 : -1));
+      startX = null;
+    });
+
+    $("read").onclick = () => {
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(pages[current].text.join(" "));
+      u.rate = 0.85;
+      speechSynthesis.speak(u);
+    };
+
+    show((parseInt(location.hash.slice(1), 10) || 1) - 1);
+  </script>
+</body>
+</html>
