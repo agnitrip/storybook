@@ -4,14 +4,15 @@ window.STORIES = [
   {
     id: "bee-and-flower",
     title: "The Bee and the Flower",
-    author: "Adhuna",
+    author: "Adhuna & Claudy",
     illustrator: "Adhuna",
     blurb: "It is fall, and a hungry baby bee cannot find any flowers.",
     cover: "stories/bee-and-flower/pages/01.svg",
     pages: [
       { image: "stories/bee-and-flower/pages/01.svg", text: [
         `The Bee and the Flower`,
-        `Written and illustrated by Adhuna`,
+        `Written by Adhuna & Claudy`,
+        `Illustrated by Adhuna`,
       ], cover: true },
       { image: "stories/bee-and-flower/pages/02.svg", text: [
         `One day, there was a baby bee.`,
