@@ -40,6 +40,7 @@ def hair_back(style, accent):
                 '<path d="M22 -38 C64 -44 72 20 52 84 C44 60 42 12 18 -18Z"/>',
         "short": '<path d="M-42 -6 C-46 20 -42 38 -30 40 L30 40 C42 38 46 20 42 -6Z"/>',
         "bun": '<circle cx="0" cy="-44" r="19"/>',
+        "boy": "",
     }[style]
     tie = f'<circle cx="24" cy="-34" r="7" fill="{accent}"/>' if style == "pony" else ""
     return f'<g fill="{HAIR}">{shape}</g>{tie}'
@@ -71,10 +72,12 @@ def face(style, mood, accent):
     }[mood]
     if style == "short":
         fringe = "M-38 2 C-42 -50 42 -50 38 2 C30 -12 14 -15 0 -13 C-14 -15 -30 -12 -38 2Z"
+    elif style == "boy":
+        fringe = "M-36 -6 C-40 -50 40 -50 36 -6 C30 -18 18 -22 8 -18 L0 -24 L-8 -18 C-20 -22 -30 -18 -36 -6Z"
     else:
         fringe = "M-38 0 C-42 -50 42 -50 38 0 C34 -20 18 -28 2 -26 C-10 -16 -26 -12 -38 0Z"
     strands = ('<path d="M-38 -4 C-43 16 -41 34 -36 46 L-29 43 C-33 27 -33 10 -31 -6Z"/>'
-               '<path d="M38 -4 C43 16 41 34 36 46 L29 43 C33 27 33 10 31 -6Z"/>') if style != "bun" else ""
+               '<path d="M38 -4 C43 16 41 34 36 46 L29 43 C33 27 33 10 31 -6Z"/>') if style not in ("bun", "boy") else ""
     extra = ""
     if style == "long":
         extra = f'<path d="M-37 -14 C-30 -44 30 -44 37 -14" fill="none" stroke="{accent}" stroke-width="6" stroke-linecap="round"/>'

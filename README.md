@@ -12,7 +12,7 @@ Short picture stories for young readers, written and illustrated by Adhuna.
 1. Photograph or scan each page and save it as `stories/bee-and-flower/pages/01.jpg`, `02.jpg`, and so on. Pictures are shown wide (4:3), so landscape drawings fit best.
 2. In `stories.js`, change that page's `image` from `.svg` to `.jpg`.
 
-The `.svg` pictures are placeholders made by `tools/make_placeholder_art.py` (bee story) and `tools/make_sleepover_art.py` (sleepover story).
+The `.svg` pictures are placeholders made by `tools/make_placeholder_art.py` (bee story), `tools/make_sleepover_art.py` (sleepover story), and `tools/make_winter_art.py` (winter story).
 
 ## Adding a new story
 
